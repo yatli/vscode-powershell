@@ -7,7 +7,7 @@ import fs = require("fs");
 import net = require("net");
 import os = require("os");
 import path = require("path");
-import vscode = require("vscode");
+import * as vscode from "./coc_compat";
 import { Logger } from "./logging";
 import Settings = require("./settings");
 import utils = require("./utils");
@@ -39,7 +39,7 @@ export class PowerShellProcess {
     public start(logFileName: string): Thenable<utils.IEditorServicesSessionDetails> {
 
         return new Promise<utils.IEditorServicesSessionDetails>(
-            (resolve, reject) => {
+            async (resolve, reject) => {
                 try {
                     const startScriptPath =
                         path.resolve(
@@ -110,7 +110,7 @@ export class PowerShellProcess {
                     utils.deleteSessionFile(this.sessionFilePath);
 
                     // Launch PowerShell in the integrated terminal
-                    this.consoleTerminal =
+                    this.consoleTerminal = await 
                         vscode.window.createTerminal(
                             this.title,
                             powerShellExePath,

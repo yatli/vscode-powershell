@@ -2,8 +2,8 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
-import vscode = require("vscode");
-import { LanguageClient, RequestType } from "vscode-languageclient";
+import * as vscode from "../coc_compat";
+import { LanguageClient, RequestType } from "../coc_compat";
 import { ICheckboxQuickPickItem, showCheckboxQuickPick } from "../controls/checkboxQuickPick";
 import { IFeature } from "../feature";
 import { Logger } from "../logging";
@@ -42,15 +42,17 @@ export class SelectPSSARulesFeature implements IFeature {
                 });
 
                 showCheckboxQuickPick(options)
-                    .then((updatedOptions: ICheckboxQuickPickItem[]) => {
+                    .then(async (updatedOptions: ICheckboxQuickPickItem[]) => {
                         if (updatedOptions === undefined) {
                             return;
                         }
 
+                        const editor = await vscode.window.activeTextEditor;
+
                         this.languageClient.sendRequest(
                             SetPSSARulesRequestType,
                             {
-                                filepath: vscode.window.activeTextEditor.document.uri.toString(),
+                                filepath: editor.document.uri.toString(),
                                 ruleInfos: updatedOptions.map((option: ICheckboxQuickPickItem): RuleInfo => {
                                     return { name: option.label, isEnabled: option.isSelected };
                                 }),

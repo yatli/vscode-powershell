@@ -4,7 +4,7 @@
 
 "use strict";
 
-import vscode = require("vscode");
+import * as vscode from "./coc_compat";
 import utils = require("./utils");
 
 enum CodeFormattingPreset {
@@ -197,7 +197,7 @@ export function change(settingName: string, newValue: any, global: boolean = fal
         vscode.workspace.getConfiguration(
             utils.PowerShellLanguageId);
 
-    return configuration.update(settingName, newValue, global);
+    configuration.update(settingName, newValue, global);
 }
 
 function getWorkspaceSettingsWithDefaults<TSettings>(

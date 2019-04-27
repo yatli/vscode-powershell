@@ -1,8 +1,8 @@
 /*---------------------------------------------------------
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
-import * as vscode from "vscode";
-import { LanguageClient, RequestType } from "vscode-languageclient";
+import * as vscode from "../coc_compat";
+import { LanguageClient, RequestType } from "../coc_compat";
 import { IFeature } from "../feature";
 import { Logger } from "../logging";
 
@@ -72,8 +72,8 @@ export class GetCommandsFeature implements IFeature {
         });
     }
 
-    private InsertCommand(item) {
-        const editor = vscode.window.activeTextEditor;
+    private async InsertCommand(item) {
+        const editor = await vscode.window.activeTextEditor;
         const sls = editor.selection.start;
         const sle = editor.selection.end;
         const range = new vscode.Range(sls.line, sls.character, sle.line, sle.character);

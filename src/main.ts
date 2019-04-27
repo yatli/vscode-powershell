@@ -5,10 +5,7 @@
 "use strict";
 
 import path = require("path");
-import coc = require("coc.nvim");
-import { ExtensionContext } from "coc.nvim";
-import { DocumentSelector } from "vscode-languageclient";
-import { IFeature } from "./feature";
+
 import { CodeActionsFeature } from "./features/CodeActions";
 import { ConsoleFeature } from "./features/Console";
 import { CustomViewsFeature } from "./features/CustomViews";
@@ -35,6 +32,9 @@ import { SessionManager } from "./session";
 import Settings = require("./settings");
 import { PowerShellLanguageId } from "./utils";
 import utils = require("./utils");
+import { IFeature } from "./feature";
+
+import * as vscode from "./coc_compat"
 
 // The most reliable way to get the name and version of the current extension.
 // tslint:disable-next-line: no-var-requires
@@ -48,14 +48,13 @@ let logger: Logger;
 let sessionManager: SessionManager;
 let extensionFeatures: IFeature[] = [];
 
-const documentSelector: DocumentSelector = [
+const documentSelector: vscode.DocumentSelector = [
     { language: "powershell", scheme: "file" },
     { language: "powershell", scheme: "untitled" },
 ];
 
-export function activate(context: ExtensionContext): void {
-
-    //coc.languages..(
+export function activate(context: vscode.ExtensionContext): void {
+    //vscode.languages..(
     //    PowerShellLanguageId,
     //    {
     //        wordPattern: /(-?\d*\.\d\w*)|([^\`\~\!\@\#\%\^\&\*\(\)\=\+\[\{\]\}\\\|\;\'\"\,\.\<\>\/\?\s]+)/g,

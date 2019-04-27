@@ -5,8 +5,8 @@
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
-import * as vscode from "vscode";
-import { LanguageClient, NotificationType, Position, Range, RequestType } from "vscode-languageclient";
+import * as vscode from "../coc_compat";
+import { LanguageClient, NotificationType, Position, Range, RequestType } from "../coc_compat";
 import { IFeature } from "../feature";
 import { Logger } from "../logging";
 
@@ -47,14 +47,15 @@ export interface IExtensionCommandAddedNotificationBody {
 
 // ---------- Editor Operations ----------
 
-function asRange(value: vscode.Range): Range {
+function asRange(value: vscode.Range): vscode.Range {
 
     if (value === undefined) {
         return undefined;
     } else if (value === null) {
         return null;
     }
-    return { start: asPosition(value.start), end: asPosition(value.end) };
+
+    return new Range(asPosition(value.start), asPosition(value.end));
 }
 
 function asPosition(value: vscode.Position): Position {
@@ -64,7 +65,7 @@ function asPosition(value: vscode.Position): Position {
     } else if (value === null) {
         return null;
     }
-    return { line: value.line, character: value.character };
+    return new Position(value.line, value.character);
 }
 
 function asCodeRange(value: Range): vscode.Range {
@@ -176,14 +177,14 @@ export class ExtensionCommandsFeature implements IFeature {
     private extensionCommands: IExtensionCommand[] = [];
 
     constructor(private log: Logger) {
-        this.command = vscode.commands.registerCommand("PowerShell.ShowAdditionalCommands", () => {
+        this.command = vscode.commands.registerCommand("PowerShell.ShowAdditionalCommands", async () => {
             if (this.languageClient === undefined) {
                 this.log.writeAndShowError(`<${ExtensionCommandsFeature.name}>: ` +
                     "Unable to instantiate; language client undefined.");
                 return;
             }
 
-            const editor = vscode.window.activeTextEditor;
+            const editor = await vscode.window.activeTextEditor;
             let start = editor.selection.start;
             const end = editor.selection.end;
             if (editor.selection.isEmpty) {
@@ -194,18 +195,19 @@ export class ExtensionCommandsFeature implements IFeature {
         });
 
         this.command2 = vscode.commands.registerCommand("PowerShell.InvokeRegisteredEditorCommand",
-                                                        (param: IInvokeRegisteredEditorCommandParameter) => {
+                                                        async (param: IInvokeRegisteredEditorCommandParameter) => {
             if (this.extensionCommands.length === 0) {
                 return;
             }
 
             const commandToExecute = this.extensionCommands.find((x) => x.name === param.commandName);
 
+            let ctx = await this.getEditorContext();
             if (commandToExecute) {
                 this.languageClient.sendRequest(
                     InvokeExtensionCommandRequestType,
                     { name: commandToExecute.name,
-                    context: this.getEditorContext() });
+                    context: ctx });
             }
         });
 
@@ -236,7 +238,7 @@ export class ExtensionCommandsFeature implements IFeature {
 
             this.languageClient.onRequest(
                 NewFileRequestType,
-                (filePath) => this.newFile());
+                (filePath) => this.newFile(filePath));
 
             this.languageClient.onRequest(
                 OpenFileRequestType,
@@ -311,15 +313,16 @@ export class ExtensionCommandsFeature implements IFeature {
             .then((command) => this.onCommandSelected(command, client));
     }
 
-    private onCommandSelected(
+    private async onCommandSelected(
         chosenItem: IExtensionCommandQuickPickItem,
         client: LanguageClient) {
 
+        let ctx = await this.getEditorContext();
         if (chosenItem !== undefined) {
             client.sendRequest(
                 InvokeExtensionCommandRequestType,
                 { name: chosenItem.command.name,
-                context: this.getEditorContext() });
+                context: ctx });
         }
     }
 
@@ -344,22 +347,24 @@ export class ExtensionCommandsFeature implements IFeature {
         return EditorOperationResponse.Completed;
     }
 
-    private getEditorContext(): IEditorContext {
+    private async getEditorContext(): Promise<IEditorContext> {
+        let editor = await vscode.window.activeTextEditor;
         return {
-            currentFileContent: vscode.window.activeTextEditor.document.getText(),
-            currentFileLanguage: vscode.window.activeTextEditor.document.languageId,
-            currentFilePath: vscode.window.activeTextEditor.document.uri.toString(),
-            cursorPosition: asPosition(vscode.window.activeTextEditor.selection.active),
+            currentFileContent: editor.document.getText(),
+            currentFileLanguage: editor.document.languageId,
+            currentFilePath: editor.document.uri.toString(),
+            cursorPosition: asPosition(editor.selection.active),
             selectionRange:
                 asRange(
                     new vscode.Range(
-                        vscode.window.activeTextEditor.selection.start,
-                        vscode.window.activeTextEditor.selection.end)),
+                        editor.selection.start,
+                        editor.selection.end)),
         };
     }
 
-    private newFile(): Thenable<EditorOperationResponse> {
-        return vscode.workspace.openTextDocument({ content: ""})
+    private newFile(filePath: string): Thenable<EditorOperationResponse> {
+        return vscode.workspace.createFile(filePath)
+                     .then(() => vscode.workspace.loadFile(filePath))
                      .then((doc) => vscode.window.showTextDocument(doc))
                      .then((_) => EditorOperationResponse.Completed);
     }
@@ -369,7 +374,7 @@ export class ExtensionCommandsFeature implements IFeature {
         const filePath = this.normalizeFilePath(openFileDetails.filePath);
 
         const promise =
-            vscode.workspace.openTextDocument(filePath)
+            vscode.workspace.loadFile(filePath)
                 .then((doc) => vscode.window.showTextDocument(
                     doc,
                     { preview: openFileDetails.preview }))
@@ -383,7 +388,7 @@ export class ExtensionCommandsFeature implements IFeature {
         let promise: Thenable<EditorOperationResponse>;
         if (this.findTextDocument(this.normalizeFilePath(filePath))) {
             promise =
-                vscode.workspace.openTextDocument(filePath)
+                vscode.workspace.loadFile(filePath)
                     .then((doc) => vscode.window.showTextDocument(doc))
                     .then((editor) => vscode.commands.executeCommand("workbench.action.closeActiveEditor"))
                     .then((_) => EditorOperationResponse.Completed);
@@ -418,9 +423,10 @@ export class ExtensionCommandsFeature implements IFeature {
 
                 // If no newFile is given, just save the current file
                 if (!saveFileDetails.newPath) {
-                    const doc = await vscode.workspace.openTextDocument(currentFileUri.fsPath);
-                    if (doc.isDirty) {
-                        await doc.save();
+                    const doc = await vscode.workspace.loadFile(currentFileUri.fsPath);
+                    if (doc.dirty) {
+                        //TODO how to write?
+                        //await doc.
                     }
                     return EditorOperationResponse.Completed;
                 }
@@ -458,13 +464,13 @@ export class ExtensionCommandsFeature implements IFeature {
                     // If not, interpret the path as relative to the workspace root
                     const workspaceRootUri = vscode.workspace.workspaceFolders[0].uri;
                     // We don't support saving to a non-file URI-schemed workspace
-                    if (workspaceRootUri.scheme !== "file") {
-                        this.log.writeAndShowWarning(
-                            "Cannot save untitled file to a relative path in an untitled workspace. " +
-                            "Try saving to an absolute path or opening a workspace folder.");
-                        return EditorOperationResponse.Completed;
-                    }
-                    newFileAbsolutePath = path.join(workspaceRootUri.fsPath, saveFileDetails.newPath);
+                    //if (workspaceRootUri.scheme !== "file") {
+                    //    this.log.writeAndShowWarning(
+                    //        "Cannot save untitled file to a relative path in an untitled workspace. " +
+                    //        "Try saving to an absolute path or opening a workspace folder.");
+                    //    return EditorOperationResponse.Completed;
+                    //}
+                    newFileAbsolutePath = path.join(workspaceRootUri, saveFileDetails.newPath);
                 }
                 break;
 
@@ -491,13 +497,13 @@ export class ExtensionCommandsFeature implements IFeature {
         documentUri: vscode.Uri,
         destinationAbsolutePath: string): Promise<void> {
             // Retrieve the text out of the current document
-            const oldDocument = await vscode.workspace.openTextDocument(documentUri);
+            const oldDocument = await vscode.workspace.loadFile(documentUri.toString());
 
             // Write it to the new document path
             try {
                 // TODO: Change this to be asyncronous
                 await new Promise<void>((resolve, reject) => {
-                    fs.writeFile(destinationAbsolutePath, oldDocument.getText(), (err) => {
+                    fs.writeFile(destinationAbsolutePath, oldDocument.getDocumentContent(), (err) => {
                         if (err) {
                             return reject(err);
                         }
@@ -512,7 +518,7 @@ export class ExtensionCommandsFeature implements IFeature {
 
             // Finally open the new document
             const newFileUri = vscode.Uri.file(destinationAbsolutePath);
-            const newFile = await vscode.workspace.openTextDocument(newFileUri);
+            const newFile = await vscode.workspace.loadFile(newFileUri.toString());
             vscode.window.showTextDocument(newFile, { preview: true });
     }
 
@@ -552,9 +558,9 @@ export class ExtensionCommandsFeature implements IFeature {
             const platform = os.platform();
             if (platform === "win32" || platform === "darwin") {
                 // for Windows and macOS paths, they are normalized to be lowercase
-                docPath = doc.fileName.toLowerCase();
+                docPath = doc.uri.toLowerCase();
             } else {
-                docPath = doc.fileName;
+                docPath = doc.uri;
             }
             return docPath === filePath;
         });
@@ -562,8 +568,10 @@ export class ExtensionCommandsFeature implements IFeature {
         return canFind != null;
     }
 
-    private setSelection(details: ISetSelectionRequestArguments): EditorOperationResponse {
-        vscode.window.activeTextEditor.selections = [
+    private async setSelection(details: ISetSelectionRequestArguments): Promise<EditorOperationResponse> {
+        let editor = await vscode.window.activeTextEditor;
+
+        editor.selections = [
             new vscode.Selection(
                 asCodePosition(details.selectionRange.start),
                 asCodePosition(details.selectionRange.end)),

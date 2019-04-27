@@ -2,8 +2,8 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
-import vscode = require("vscode");
-import { LanguageClient, NotificationType, RequestType } from "vscode-languageclient";
+import * as vscode from "../coc_compat";
+import { LanguageClient, NotificationType, RequestType } from "../coc_compat";
 import { IFeature } from "../feature";
 
 export class NewFileOrProjectFeature implements IFeature {

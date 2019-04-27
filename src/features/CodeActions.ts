@@ -2,8 +2,8 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
-import vscode = require("vscode");
-import { LanguageClient } from "vscode-languageclient";
+import * as vscode from "../coc_compat"
+import { LanguageClient } from "coc.nvim";
 import Window = vscode.window;
 import { IFeature } from "../feature";
 import { ILogger } from "../logging";
@@ -15,7 +15,7 @@ export class CodeActionsFeature implements IFeature {
 
     constructor(private log: ILogger) {
         this.applyEditsCommand = vscode.commands.registerCommand("PowerShell.ApplyCodeActionEdits", (edit: any) => {
-            Window.activeTextEditor.edit((editBuilder) => {
+            Window.activeTextEditor.then(editor => editor.edit((editBuilder) => {
                 editBuilder.replace(
                     new vscode.Range(
                         edit.StartLineNumber - 1,
@@ -23,7 +23,7 @@ export class CodeActionsFeature implements IFeature {
                         edit.EndLineNumber - 1,
                         edit.EndColumnNumber - 1),
                     edit.Text);
-            });
+            }));
         });
 
         this.showDocumentationCommand =

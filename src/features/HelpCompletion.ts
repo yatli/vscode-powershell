@@ -2,9 +2,10 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
+import * as vscode from "../coc_compat";
 import { Disposable, EndOfLine, Position, Range, SnippetString,
-    TextDocument, TextDocumentChangeEvent, window, workspace } from "vscode";
-import { LanguageClient, RequestType } from "vscode-languageclient";
+    TextDocument, TextDocumentChangeEvent, window, workspace } from "../coc_compat";
+import { LanguageClient, RequestType } from "../coc_compat";
 import { IFeature } from "../feature";
 import { Logger } from "../logging";
 import Settings = require("../settings");

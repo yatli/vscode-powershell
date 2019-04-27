@@ -2,8 +2,8 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
-import vscode = require("vscode");
-import { LanguageClient, NotificationType, RequestType } from "vscode-languageclient";
+import * as vscode from "../coc_compat";
+import { LanguageClient, NotificationType, RequestType } from "../coc_compat";
 import { ICheckboxQuickPickItem, showCheckboxQuickPick } from "../controls/checkboxQuickPick";
 import { IFeature } from "../feature";
 import { Logger } from "../logging";
@@ -224,7 +224,7 @@ export class ConsoleFeature implements IFeature {
                     return;
                 }
 
-                const editor = vscode.window.activeTextEditor;
+                const editor = await vscode.window.activeTextEditor;
                 let selectionRange: vscode.Range;
 
                 if (!editor.selection.isEmpty) {

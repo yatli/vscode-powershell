@@ -4,7 +4,7 @@
 
 import cp = require("child_process");
 import os = require("os");
-import vscode = require("vscode");
+import * as vscode from "../coc_compat";
 import { IFeature, LanguageClient } from "../feature";
 import { SessionManager } from "../session";
 import Settings = require("../settings");

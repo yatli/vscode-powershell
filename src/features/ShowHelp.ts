@@ -2,8 +2,8 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
-import vscode = require("vscode");
-import { LanguageClient, NotificationType, RequestType } from "vscode-languageclient";
+import * as vscode from "../coc_compat";
+import { LanguageClient, NotificationType, RequestType } from "../coc_compat";
 import { IFeature } from "../feature";
 import { Logger } from "../logging";
 
@@ -16,7 +16,7 @@ export class ShowHelpFeature implements IFeature {
     private languageClient: LanguageClient;
 
     constructor(private log: Logger) {
-        this.command = vscode.commands.registerCommand("PowerShell.ShowHelp", (item?) => {
+        this.command = vscode.commands.registerCommand("PowerShell.ShowHelp", async (item?) => {
             if (this.languageClient === undefined) {
                 this.log.writeAndShowError(`<${ShowHelpFeature.name}>: ` +
                     "Unable to instantiate; language client undefined.");
@@ -24,7 +24,7 @@ export class ShowHelpFeature implements IFeature {
             }
             if (!item || !item.Name) {
 
-                const editor = vscode.window.activeTextEditor;
+                const editor = await vscode.window.activeTextEditor;
 
                 const selection = editor.selection;
                 const doc = editor.document;

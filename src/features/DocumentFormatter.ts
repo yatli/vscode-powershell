@@ -3,7 +3,7 @@
  *--------------------------------------------------------*/
 
 import * as path from "path";
-import vscode = require("vscode");
+import * as vscode from "../coc_compat";
 import {
     CancellationToken,
     DocumentFormattingEditProvider,
@@ -16,16 +16,18 @@ import {
     TextEdit,
     TextEditor,
     TextLine,
-} from "vscode";
-import {
+    ProviderResult,
     DocumentFormattingRequest,
     DocumentRangeFormattingParams,
     DocumentRangeFormattingRequest,
     DocumentSelector,
     LanguageClient,
     RequestType,
-} from "vscode-languageclient";
-import { TextDocumentIdentifier } from "vscode-languageserver-types";
+    TextDocumentIdentifier,
+} from "../coc_compat";
+import {
+    TextDocument as VSTD,
+} from "vscode"
 import Window = vscode.window;
 import * as AnimatedStatusBar from "../controls/animatedStatusBar";
 import { IFeature } from "../feature";
@@ -168,7 +170,7 @@ class PSDocumentFormattingEditProvider implements
     public provideDocumentFormattingEdits(
         document: TextDocument,
         options: FormattingOptions,
-        token: CancellationToken): TextEdit[] | Thenable<TextEdit[]> {
+        token: CancellationToken): ProviderResult<TextEdit[]>{
 
         this.logger.writeVerbose(`Formatting entire document - ${document.uri}...`);
         return this.sendDocumentFormatRequest(document, null, options, token);
@@ -298,7 +300,7 @@ class PSDocumentFormattingEditProvider implements
     }
 
     private getEditor(document: TextDocument): TextEditor {
-        return Window.visibleTextEditors.find((e, n, obj) => e.document === document);
+        return Window.visibleTextEditors.find((e, n, obj) => e.textDocument === document);
     }
 
     private isDocumentLocked(document: TextDocument): boolean {
@@ -329,17 +331,16 @@ export class DocumentFormatterFeature implements IFeature {
 
     constructor(private logger: Logger, documentSelector: DocumentSelector) {
         this.documentFormattingEditProvider = new PSDocumentFormattingEditProvider(logger);
-        this.formattingEditProvider = vscode.languages.registerDocumentFormattingEditProvider(
+        this.formattingEditProvider = vscode.languages.registerDocumentFormatProvider(
             documentSelector,
             this.documentFormattingEditProvider);
-        this.rangeFormattingEditProvider = vscode.languages.registerDocumentRangeFormattingEditProvider(
+        this.rangeFormattingEditProvider = vscode.languages.registerDocumentRangeFormatProvider(
             documentSelector,
             this.documentFormattingEditProvider);
         this.onTypeFormattingEditProvider = vscode.languages.registerOnTypeFormattingEditProvider(
             documentSelector,
             this.documentFormattingEditProvider,
-            this.firstTriggerCharacter,
-            ...this.moreTriggerCharacters);
+            [this.firstTriggerCharacter, ...this.moreTriggerCharacters]);
     }
 
     public dispose(): any {

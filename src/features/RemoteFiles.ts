@@ -4,8 +4,8 @@
 
 import os = require("os");
 import path = require("path");
-import vscode = require("vscode");
-import { LanguageClient, NotificationType, RequestType, TextDocumentIdentifier } from "vscode-languageclient";
+import * as vscode from "../coc_compat";
+import { LanguageClient, NotificationType, RequestType, TextDocumentIdentifier } from "../coc_compat";
 import { IFeature } from "../feature";
 
 // NOTE: The following two DidSaveTextDocument* types will
@@ -58,7 +58,7 @@ export class RemoteFilesFeature implements IFeature {
     }
 
     private isDocumentRemote(doc: vscode.TextDocument) {
-        return doc.fileName.toLowerCase().startsWith(this.tempSessionPathPrefix);
+        return doc.uri.toLowerCase().startsWith(this.tempSessionPathPrefix);
     }
 
     private closeRemoteFiles() {

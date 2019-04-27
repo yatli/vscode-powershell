@@ -2,9 +2,9 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
-import vscode = require("vscode");
+import * as vscode from "../coc_compat";
 import Window = vscode.window;
-import { LanguageClient, NotificationType, RequestType } from "vscode-languageclient";
+import { LanguageClient, NotificationType, RequestType } from "../coc_compat";
 import { IFeature } from "../feature";
 import { Logger } from "../logging";
 
@@ -15,14 +15,14 @@ export class ExpandAliasFeature implements IFeature {
     private languageClient: LanguageClient;
 
     constructor(private log: Logger) {
-        this.command = vscode.commands.registerCommand("PowerShell.ExpandAlias", () => {
+        this.command = vscode.commands.registerCommand("PowerShell.ExpandAlias", async () => {
             if (this.languageClient === undefined) {
                 this.log.writeAndShowError(`<${ExpandAliasFeature.name}>: ` +
                     "Unable to instantiate; language client undefined.");
                 return;
             }
 
-            const editor = Window.activeTextEditor;
+            const editor = await Window.activeTextEditor;
             const document = editor.document;
             const selection = editor.selection;
             const sls = selection.start;

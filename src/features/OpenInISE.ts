@@ -3,16 +3,16 @@
  *--------------------------------------------------------*/
 
 import ChildProcess = require("child_process");
-import vscode = require("vscode");
+import * as vscode from "../coc_compat";
 import { IFeature, LanguageClient } from "../feature";
 
 export class OpenInISEFeature implements IFeature {
     private command: vscode.Disposable;
 
     constructor() {
-        this.command = vscode.commands.registerCommand("PowerShell.OpenInISE", () => {
+        this.command = vscode.commands.registerCommand("PowerShell.OpenInISE", async () => {
 
-            const editor = vscode.window.activeTextEditor;
+            const editor = await vscode.window.activeTextEditor;
             const document = editor.document;
             const uri = document.uri;
 

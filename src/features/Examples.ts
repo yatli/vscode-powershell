@@ -3,8 +3,8 @@
  *--------------------------------------------------------*/
 
 import path = require("path");
-import vscode = require("vscode");
-import { LanguageClient } from "vscode-languageclient";
+import * as vscode from "../coc_compat";
+import { LanguageClient } from "../coc_compat";
 import { IFeature } from "../feature";
 
 export class ExamplesFeature implements IFeature {

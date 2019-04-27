@@ -3,7 +3,7 @@
  *--------------------------------------------------------*/
 
 import * as path from "path";
-import vscode = require("vscode");
+import * as vscode from "../coc_compat";
 import { IFeature, LanguageClient } from "../feature";
 import { SessionManager } from "../session";
 import Settings = require("../settings");
@@ -51,9 +51,10 @@ export class PesterTestsFeature implements IFeature {
         this.languageClient = languageClient;
     }
 
-    private launchAllTestsInActiveEditor(launchType: LaunchType) {
-        const uriString = vscode.window.activeTextEditor.document.uri.toString();
-        const launchConfig = this.createLaunchConfig(uriString, launchType);
+    private async launchAllTestsInActiveEditor(launchType: LaunchType) {
+        const editor = await vscode.window.activeTextEditor;
+        const uriString = editor.document.uri.toString();
+        const launchConfig = await this.createLaunchConfig(uriString, launchType);
         launchConfig.args.push("-All");
         this.launch(launchConfig);
     }
@@ -69,9 +70,10 @@ export class PesterTestsFeature implements IFeature {
         this.launch(launchConfig);
     }
 
-    private createLaunchConfig(uriString: string, launchType: LaunchType, testName?: string, lineNum?: number) {
+    private async createLaunchConfig(uriString: string, launchType: LaunchType, testName?: string, lineNum?: number) {
+        const editor = await vscode.window.activeTextEditor;
         const uri = vscode.Uri.parse(uriString);
-        const currentDocument = vscode.window.activeTextEditor.document;
+        const currentDocument = editor.document;
         const settings = Settings.load();
 
         // Since we pass the script path to PSES in single quotes to avoid issues with PowerShell
@@ -123,6 +125,7 @@ export class PesterTestsFeature implements IFeature {
             this.sessionManager.getSessionDetails());
 
         // TODO: Update to handle multiple root workspaces.
-        vscode.debug.startDebugging(vscode.workspace.workspaceFolders[0], launchConfig);
+        // TODO coc debug
+        //vscode.debug.startDebugging(vscode.workspace.workspaceFolders[0], launchConfig);
     }
 }
