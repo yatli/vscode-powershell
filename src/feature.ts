@@ -2,11 +2,11 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
-import vscode = require("vscode");
-import { LanguageClient } from "vscode-languageclient";
-export { LanguageClient } from "vscode-languageclient";
+import coc = require("coc.nvim");
+import { LanguageClient } from "coc.nvim";
+export { LanguageClient } from "coc.nvim";
 
-export interface IFeature extends vscode.Disposable {
+export interface IFeature extends coc.Disposable {
     setLanguageClient(languageclient: LanguageClient);
     dispose();
 }

@@ -1,15 +1,15 @@
 {
-  "name": "powershell-preview",
-  "displayName": "PowerShell Preview",
-  "version": "2.0.0-preview.3",
+  "name": "coc-powershell",
+  "displayName": "Coc.nvim integration for PowerShell - Preview",
+  "version": "0.0.1",
   "preview": true,
-  "publisher": "ms-vscode",
-  "description": "(Preview) Develop PowerShell scripts in Visual Studio Code!",
+  "publisher": "yatli",
+  "description": "(Preview) Develop PowerShell scripts in Vim!",
   "engines": {
-    "vscode": "^1.31.0"
+    "coc": ">= 0.0.65"
   },
-  "license": "SEE LICENSE IN LICENSE.txt",
-  "homepage": "https://github.com/PowerShell/vscode-powershell/blob/master/README.md",
+  "license": "MIT",
+  "homepage": "https://github.com/yatli/coc-powershell/blob/master/README.md",
   "categories": [
     "Debuggers",
     "Programming Languages",
@@ -23,7 +23,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/PowerShell/vscode-powershell.git"
+    "url": "https://github.com/yatli/coc-powershell.git"
   },
   "main": "./out/src/main",
   "activationEvents": [
@@ -40,28 +40,21 @@
     "onView:PowerShellCommands"
   ],
   "dependencies": {
-    "vscode-extension-telemetry": "~0.1.1",
+    "coc.nvim": "^0.0.66",
     "vscode-languageclient": "~5.2.1"
   },
   "devDependencies": {
     "@types/mocha": "~5.2.6",
-    "@types/node": "~11.13.7",
+    "@types/node": "^11.13.8",
     "mocha": "~5.2.0",
     "mocha-junit-reporter": "~1.22.0",
     "mocha-multi-reporters": "~1.1.7",
     "tslint": "~5.15.0",
-    "typescript": "~3.4.3",
-    "vsce": "~1.59.0",
-    "vscode": "~1.1.33"
+    "typescript": "~3.4.3"
   },
-  "extensionDependencies": [
-    "vscode.powershell"
-  ],
   "scripts": {
     "compile": "tsc -v && tsc -p ./ && tslint -p ./",
-    "compile-watch": "tsc -watch -p ./",
-    "postinstall": "node ./node_modules/vscode/bin/install",
-    "test": "node ./node_modules/vscode/bin/test"
+    "compile-watch": "tsc -watch -p ./"
   },
   "contributes": {
     "viewsContainers": {
@@ -585,7 +578,7 @@
         },
         "powershell.bugReporting.project": {
           "type": "string",
-          "default": "https://github.com/PowerShell/vscode-powershell",
+          "default": "https://github.com/yatli/coc-powershell",
           "description": "Specifies the url of the GitHub project in which to generate bug reports."
         },
         "powershell.helpCompletion": {
